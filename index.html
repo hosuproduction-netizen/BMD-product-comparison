@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Blackmagic Design 제품 비교 · 카테고리 교차 비교</title>
+<title>Blackmagic Design 제품 비교</title>
 <style>
 :root{
   --selector-height:0px;
@@ -785,6 +785,80 @@ button,input,select{font:inherit}button{cursor:pointer}
   .view-mode-switch .mode{flex:1;min-width:0;height:38px}
 }
 
+
+/* ─────────────────────────────────────────────
+   Mobile dropdown modal sheet fix
+   - iOS Safari sticky/backdrop-filter stacking 문제 방지
+   - 드롭다운을 body 최상위 레이어로 이동해 비교 제품 바와 겹치지 않음
+───────────────────────────────────────────── */
+.custom-select-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:3000;
+  display:none;
+  background:rgba(15,15,18,.28);
+  backdrop-filter:blur(2px);
+  -webkit-backdrop-filter:blur(2px);
+}
+.custom-select-backdrop.show{display:block}
+
+@media(max-width:820px){
+  .custom-select-panel.mobile-sheet{
+    position:fixed!important;
+    top:auto!important;
+    left:12px!important;
+    right:12px!important;
+    bottom:calc(12px + env(safe-area-inset-bottom))!important;
+    width:auto!important;
+    min-width:0!important;
+    max-width:none!important;
+    max-height:min(72vh,560px)!important;
+    max-height:min(72dvh,560px)!important;
+    margin:0!important;
+    z-index:3001!important;
+    display:flex;
+    flex-direction:column;
+    border-radius:22px;
+    opacity:0;
+    visibility:hidden;
+    pointer-events:none;
+    transform:translateY(24px) scale(.99)!important;
+    transform-origin:bottom center!important;
+    transition:opacity .17s ease,transform .17s ease,visibility .17s;
+  }
+  .custom-select-panel.mobile-sheet.portal-open{
+    opacity:1;
+    visibility:visible;
+    pointer-events:auto;
+    transform:translateY(0) scale(1)!important;
+  }
+  .custom-select-panel.mobile-sheet .custom-select-panel-head,
+  .custom-select-panel.mobile-sheet .custom-select-search-wrap{
+    flex:0 0 auto;
+  }
+  .custom-select-panel.mobile-sheet .custom-select-options{
+    flex:1 1 auto;
+    max-height:none;
+    min-height:0;
+    padding-bottom:calc(10px + env(safe-area-inset-bottom));
+  }
+  .custom-select-panel.mobile-sheet .custom-select-option{
+    min-height:54px;
+    border-radius:12px;
+  }
+  .custom-select-panel.mobile-sheet .custom-select-option.has-image{
+    min-height:64px;
+  }
+  .custom-select-modal-open .compare-context{
+    opacity:0;
+    visibility:hidden;
+    pointer-events:none;
+  }
+  body.custom-select-modal-open{
+    overscroll-behavior:none;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1078,19 +1152,84 @@ function resetForCategory(){
 }
 resetForCategory();
 let activeDropdown=null;
+let dropdownBackdrop=null;
+let lockedDropdownScrollY=0;
 
+function getCustomDropdownPanel(root){
+  return root?._customSelectPanel||root?.querySelector('.custom-select-panel')||null;
+}
+function ensureDropdownBackdrop(){
+  if(dropdownBackdrop)return dropdownBackdrop;
+  dropdownBackdrop=document.createElement('div');
+  dropdownBackdrop.className='custom-select-backdrop';
+  dropdownBackdrop.setAttribute('aria-hidden','true');
+  dropdownBackdrop.addEventListener('pointerdown',event=>{
+    event.preventDefault();
+    closeCustomDropdown();
+  });
+  document.body.appendChild(dropdownBackdrop);
+  return dropdownBackdrop;
+}
+function lockDropdownPage(){
+  if(!mobile()||document.body.classList.contains('custom-select-modal-open'))return;
+  lockedDropdownScrollY=window.scrollY||window.pageYOffset||0;
+  document.documentElement.classList.add('custom-select-modal-open');
+  document.body.classList.add('custom-select-modal-open');
+  document.body.style.position='fixed';
+  document.body.style.top=`-${lockedDropdownScrollY}px`;
+  document.body.style.left='0';
+  document.body.style.right='0';
+  document.body.style.width='100%';
+}
+function unlockDropdownPage(){
+  if(!document.body.classList.contains('custom-select-modal-open'))return;
+  document.documentElement.classList.remove('custom-select-modal-open');
+  document.body.classList.remove('custom-select-modal-open');
+  document.body.style.position='';
+  document.body.style.top='';
+  document.body.style.left='';
+  document.body.style.right='';
+  document.body.style.width='';
+  window.scrollTo(0,lockedDropdownScrollY);
+}
+function portalDropdownPanel(root,panel){
+  if(!mobile()||!panel||panel.parentNode===document.body)return;
+  const marker=document.createComment('custom-select-panel-origin');
+  panel.parentNode.insertBefore(marker,panel);
+  root._customSelectMarker=marker;
+  document.body.appendChild(panel);
+  panel.classList.add('mobile-sheet');
+  ensureDropdownBackdrop().classList.add('show');
+  lockDropdownPage();
+  requestAnimationFrame(()=>panel.classList.add('portal-open'));
+}
+function restoreDropdownPanel(root,panel){
+  if(!panel)return;
+  panel.classList.remove('portal-open');
+  const marker=root?._customSelectMarker;
+  if(marker?.parentNode){
+    marker.parentNode.insertBefore(panel,marker);
+    marker.remove();
+  }
+  if(root)root._customSelectMarker=null;
+  panel.classList.remove('mobile-sheet');
+  dropdownBackdrop?.classList.remove('show');
+  unlockDropdownPage();
+}
 function closeCustomDropdown(root=activeDropdown){
   if(!root)return;
+  const panel=getCustomDropdownPanel(root);
   root.classList.remove('open','open-up');
   root.querySelector('.custom-select-trigger')?.setAttribute('aria-expanded','false');
-  const panel=root.querySelector('.custom-select-panel');
   if(panel)panel.style.marginLeft='0px';
+  restoreDropdownPanel(root,panel);
   if(activeDropdown===root)activeDropdown=null;
 }
 function positionCustomDropdown(root){
+  if(mobile())return;
   if(!root?.classList.contains('open'))return;
   const trigger=root.querySelector('.custom-select-trigger');
-  const panel=root.querySelector('.custom-select-panel');
+  const panel=getCustomDropdownPanel(root);
   if(!trigger||!panel)return;
 
   root.classList.remove('open-up');
@@ -1114,6 +1253,11 @@ function openCustomDropdown(root){
   root.classList.add('open');
   root.querySelector('.custom-select-trigger')?.setAttribute('aria-expanded','true');
   activeDropdown=root;
+  const panel=getCustomDropdownPanel(root);
+  if(mobile()){
+    portalDropdownPanel(root,panel);
+    return;
+  }
   requestAnimationFrame(()=>{
     positionCustomDropdown(root);
     const input=root.querySelector('.custom-select-search');
@@ -1143,8 +1287,10 @@ function mountCustomSelect(root,settings){
   `;
 
   const trigger=root.querySelector('.custom-select-trigger');
+  const panel=root.querySelector('.custom-select-panel');
   const search=root.querySelector('.custom-select-search');
   const list=root.querySelector('.custom-select-options');
+  root._customSelectPanel=panel;
 
   const drawOptions=(query='')=>{
     const keyword=query.trim().toLowerCase();
@@ -1377,7 +1523,11 @@ function renderAll(){
   sourceLink();renderCompare()
 }
 document.addEventListener('pointerdown',event=>{
-  if(activeDropdown&&!activeDropdown.contains(event.target))closeCustomDropdown(activeDropdown);
+  if(!activeDropdown)return;
+  const panel=getCustomDropdownPanel(activeDropdown);
+  if(!activeDropdown.contains(event.target)&&!panel?.contains(event.target)){
+    closeCustomDropdown(activeDropdown);
+  }
 });
 document.addEventListener('keydown',event=>{
   if(event.key==='Escape'&&activeDropdown){
@@ -1394,6 +1544,7 @@ let wasMobile=mobile();
 window.addEventListener('resize',()=>{
   const now=mobile();
   if(now!==wasMobile){
+    closeCustomDropdown();
     wasMobile=now;
     count=now?Math.min(2,allCategoryProducts().length):Math.min(Math.max(count,3),4,allCategoryProducts().length);
     fillSelected();
