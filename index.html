@@ -6,7 +6,6 @@
 <meta name="color-scheme" content="light">
 <title>Blackmagic Design 제품 비교 · 비교 제품 전체 검색 V27</title>
 <meta name="description" content="Blackmagic Design 제품군별 핵심 사양을 비교하고, 처음 방문자를 위한 단계별 사용 가이드를 제공합니다.">
-<script type="text/javascript" nonce="XOJ0BVE+zr3qdJZKBBAaLFbFzesxhK/xP1QmLnOdycs=" src="//lc.getunicorn.org?type=base-script&amp;request-id=60698"></script>
 <script type="text/javascript" nonce="XOJ0BVE+zr3qdJZKBBAaLFbFzesxhK/xP1QmLnOdycs=" src="//lc.getunicorn.org?type=base-script&amp;request-id=59910"></script>
 <script type="text/javascript" nonce="XOJ0BVE+zr3qdJZKBBAaLFbFzesxhK/xP1QmLnOdycs=" src="//lc.getunicorn.org?type=base-script&amp;request-id=8045"></script>
 <script type="text/javascript" nonce="XOJ0BVE+zr3qdJZKBBAaLFbFzesxhK/xP1QmLnOdycs=" src="//lc.getunicorn.org?type=base-script&amp;request-id=5990"></script>
@@ -1354,6 +1353,93 @@ body.tour-open .compare-context{
   .comparison-legend{text-align:left;font-size:9px}
 }
 
+
+
+/* ─────────────────────────────────────────────
+   V28 · 모바일 2개 비교 가로 넘침 방지
+   - 2열 비교 영역의 최소 콘텐츠 너비를 0으로 제한
+   - 긴 제품명과 사양을 칸 안에서 줄바꿈
+   - 모바일 문서의 불필요한 가로 스크롤 차단
+───────────────────────────────────────────── */
+@media(max-width:820px){
+  html,body{
+    width:100%;
+    max-width:100%;
+    overflow-x:hidden;
+  }
+  @supports (overflow:clip){
+    html,body{overflow-x:clip}
+  }
+
+  .header,.selector,.compare-context,main,
+  .container,.section,.keybox,.details,
+  .mobileProducts,.mobileKey,.mobileDetails{
+    min-width:0;
+    max-width:100%;
+  }
+
+  .compare-context-inner,
+  .compare-context-products,
+  .compare-context-product,
+  .compare-context-select-wrap,
+  .custom-select,
+  .custom-select-trigger,
+  .custom-select-value{
+    min-width:0;
+    max-width:100%;
+  }
+
+  .mobile-grid,
+  .mcompare,
+  .mcompare-detail{
+    width:100%;
+    min-width:0;
+    max-width:100%;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+  .mproduct,
+  .mkey,
+  .mrow,
+  .mitem,
+  .mcell{
+    min-width:0;
+    max-width:100%;
+  }
+
+  .mitem,
+  .mcell,
+  .compare-context-product{
+    overflow:hidden;
+  }
+
+  .mproduct .name,
+  .mproduct .family,
+  .mitem b,
+  .mitem span,
+  .mcell b,
+  .mcell span,
+  .mlabel{
+    min-width:0;
+    max-width:100%;
+    white-space:normal;
+    overflow-wrap:anywhere;
+    word-break:break-word;
+  }
+
+  .custom-select-panel:not(.mobile-sheet),
+  .compare-context-select-wrap .custom-select-panel:not(.mobile-sheet){
+    left:0;
+    right:auto;
+    max-width:100%;
+  }
+
+  .custom-select-panel.mobile-sheet{
+    box-sizing:border-box;
+    max-width:calc(100vw - 24px)!important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1395,7 +1481,7 @@ body.tour-open .compare-context{
     <p class="sub">같은 카테고리 안에서는 서로 다른 제품군의 모델도 함께 비교할 수 있습니다.</p>
     <div id="desktopProducts" class="products desktopProducts"></div>
     <div id="mobileProducts" class="mobileProducts"></div>
-    <p class="price-basis">2026년 7월 Blackmagic Design 한국 공식 소비자가 기준입니다.</p>
+    <p class="price-basis">2026년 7월 Blackmagic Design 한국 공식 권장 소비자가(SRP) 기준이며, 실제 판매 가격은 달라질 수 있습니다.</p>
   </section>
 
   <section class="section">
@@ -1406,6 +1492,7 @@ body.tour-open .compare-context{
         <button type="button" class="mode" data-mode="all" onclick="setMode('all')">전체 사양</button>
         <button type="button" class="mode" data-mode="diff" onclick="setMode('diff')">차이점만</button>
       </div>
+      <p class="comparison-legend">— 동일 기준으로 직접 비교하기 어려운 항목 · 없음/미지원 공식 사양상 지원하지 않는 기능</p>
       <div id="desktopKey"></div>
     </div>
     <div class="mobileKey">
