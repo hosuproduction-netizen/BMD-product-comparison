@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light">
-<title>Blackmagic Design 제품 비교 · 로고 우측 배치 V32</title>
+<title>Blackmagic Design 제품 비교 · 하이픽셀플러스</title>
 <meta name="description" content="Blackmagic Design 제품군별 핵심 사양을 비교하고, 처음 방문자를 위한 단계별 사용 가이드를 제공합니다.">
 <script type="text/javascript" nonce="XOJ0BVE+zr3qdJZKBBAaLFbFzesxhK/xP1QmLnOdycs=" src="//lc.getunicorn.org?type=base-script&amp;request-id=59910"></script>
 <script type="text/javascript" nonce="XOJ0BVE+zr3qdJZKBBAaLFbFzesxhK/xP1QmLnOdycs=" src="//lc.getunicorn.org?type=base-script&amp;request-id=8045"></script>
@@ -94,8 +94,8 @@ button,input,select{font:inherit}button{cursor:pointer}
 .keyrow:first-of-type{border-top:0}
 .keylabel{text-align:center;font-size:14px;font-weight:850}
 .keyvals{display:grid;grid-template-columns:repeat(var(--cols),minmax(0,1fr));gap:24px;margin-top:25px}
-.key{text-align:center}
-.big{font-size:clamp(22px,2.7vw,40px);font-weight:800;letter-spacing:-.04em;line-height:1.12;word-break:keep-all}.big.long{font-size:clamp(16px,1.65vw,24px);line-height:1.4;letter-spacing:-.025em;word-break:keep-all}
+.key{text-align:center;display:flex;flex-direction:column;align-items:center}
+.big{font-size:clamp(21px,2.45vw,36px);font-weight:800;letter-spacing:-.04em;line-height:1.16;word-break:keep-all;overflow-wrap:anywhere}.big.compact{font-size:clamp(18px,2vw,30px);line-height:1.22;letter-spacing:-.03em}.big.tight{font-size:clamp(15px,1.55vw,24px);line-height:1.28;letter-spacing:-.025em}.big.ultra{font-size:clamp(13px,1.22vw,20px);line-height:1.33;letter-spacing:-.02em}
 .small{margin-top:8px;color:var(--muted);font-size:11px}
 .details{margin-top:40px;border-top:1px solid var(--line)}
 .group{border-bottom:1px solid var(--line)}
@@ -1648,6 +1648,12 @@ body.tour-open .compare-context{
   }
 }
 
+
+.company-logo-link{display:inline-flex;align-items:center;justify-content:flex-end;text-decoration:none;cursor:pointer}
+.company-logo-link:focus-visible{outline:3px solid rgba(0,113,227,.28);outline-offset:4px;border-radius:10px}
+.company-logo-link:hover .company-logo-right{opacity:.9;transform:translateY(-1px)}
+.company-logo-right{transition:transform .15s ease,opacity .15s ease}
+
 </style>
 </head>
 <body>
@@ -1655,7 +1661,7 @@ body.tour-open .compare-context{
   <div class="headerin">
     <div class="brand"><span>Blackmagic Design 제품 비교</span></div>
     <div class="header-actions">
-      <img class="company-logo company-logo-right" src="https://ecimg.cafe24img.com/pg821b55468729089/hipplus/file_data/8ae971c83d689d5d637765b848ffdc51.png" alt="HiPixel Plus">
+      <a class="company-logo-link" href="https://hipixel.co.kr/" target="_blank" rel="noopener" aria-label="HiPixel Plus 쇼핑몰로 이동"><img class="company-logo company-logo-right" src="https://ecimg.cafe24img.com/pg821b55468729089/hipplus/file_data/8ae971c83d689d5d637765b848ffdc51.png" alt="HiPixel Plus"></a>
     </div>
   </div>
 </header>
@@ -2875,12 +2881,22 @@ function renderProducts(){
   document.getElementById('desktopProducts').innerHTML=ps.map(product=>`<article class="product"><div class="photo"><img src="${product.image}" alt="${esc(product.name)}" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'"></div><div class="series-tag">${esc(productGroupLabel(product))}</div><div class="name">${esc(product.name)}</div><div class="family">${esc(product.family||'')}</div><div class="product-price ${product.price_krw?'':'unavailable'}">${esc(product.price_display||'가격표 미일치')}</div><div class="summary">${esc(product.summary||'')}</div><a class="product-spec-link" href="${esc(productSource(product))}" target="_blank" rel="noopener">공식 Tech Specs ↗</a></article>`).join('');
   document.getElementById('mobileProducts').innerHTML=`<div class="mobile-grid">${ps.map(product=>`<article class="mproduct"><div class="mphoto"><img src="${product.image}" alt="${esc(product.name)}" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'"></div><div class="series-tag">${esc(productGroupLabel(product))}</div><div class="name">${esc(product.short||product.name)}</div><div class="family">${esc(product.family||'')}</div><div class="product-price ${product.price_krw?'':'unavailable'}">${esc(product.price_display||'가격표 미일치')}</div><a class="product-spec-link" href="${esc(productSource(product))}" target="_blank" rel="noopener">공식 사양 ↗</a></article>`).join('')}</div>`;
 }
+
+function getUniformKeyClass(vals){
+  const maxLen=Math.max(...vals.map(v=>String(v??'').replace(/\s+/g,'').length));
+  if(maxLen>=46)return 'ultra';
+  if(maxLen>=32)return 'tight';
+  if(maxLen>=22)return 'compact';
+  return '';
+}
+
 function renderKey(){
   const ps=selectedProducts();let d='',m='';
   currentKeySpecs().forEach(([key,label])=>{
     const vals=ps.map(p=>specValue(p,key)),is=different(vals);
     if(!(mode==='all'||is))return;
-    d+=`<section class="keyrow ${key==='price'?'price-keyrow':''}"><div class="keylabel">${esc(label)}</div><div class="keyvals">${ps.map((p,i)=>`<div class="key"><div class="big ${String(vals[i]).length>28?'long':''}">${esc(vals[i])}</div><div class="small">${esc(p.short||p.name)}</div></div>`).join('')}</div></section>`;
+    const uniformClass=getUniformKeyClass(vals);
+    d+=`<section class="keyrow ${key==='price'?'price-keyrow':''}"><div class="keylabel">${esc(label)}</div><div class="keyvals">${ps.map((p,i)=>`<div class="key"><div class="big ${uniformClass}">${esc(vals[i])}</div><div class="small">${esc(p.short||p.name)}</div></div>`).join('')}</div></section>`;
     m+=`<section class="mkey"><div class="mkeylabel">${esc(label)}</div><div class="mcompare">${ps.map((p,i)=>`<div class="mitem ${is?'diff':''}"><b>${esc(p.short||p.name)}</b><span>${esc(vals[i])}</span></div>`).join('')}</div></section>`
   });
   document.getElementById('desktopKey').innerHTML=d;
